@@ -16,7 +16,7 @@ namespace DattingApp.API.Data
         }
         public async Task<User> Login(string username, string password)
         {
-            var user = await _db.Users.FirstOrDefaultAsync(x => x.Username == username);
+            var user = await _db.Users.Include(p => p.Photos).FirstOrDefaultAsync(x => x.Username == username);
             if (user == null) return null;
             if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt)) return null;
             return user;

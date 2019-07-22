@@ -12,8 +12,9 @@ import { NgForm } from '@angular/forms';
   styleUrls: ['./member-edit.component.css']
 })
 export class MemberEditComponent implements OnInit {
-  @ViewChild('editForm') editForm: NgForm;
+  @ViewChild('editForm', {static: false}) editForm: NgForm;
   user: User;
+  photoUrl: string;
   constructor(private route: ActivatedRoute, private alertify: AlertifyService,
               private userService: UserService, private auth: AuthService) { }
 
@@ -22,14 +23,19 @@ export class MemberEditComponent implements OnInit {
       // tslint:disable-next-line: no-string-literal
       this.user = data['user'];
     });
+    this.auth.currentPhotoUrl.subscribe(photoUrl => this.photoUrl = photoUrl);
   }
   updateUser() {
-    this.userService.updateUser(this.auth.decodedToken.nameid,this.user).subscribe(next => {
+    this.userService.updateUser(this.auth.decodedToken.nameid, this.user).subscribe(next => {
       this.alertify.success('Profile Changed!');
       this.editForm.reset(this.user);
-    },error => {
+    }, error => {
       this.alertify.error(error);
-    })
+    });
+  }
+
+  updateMainPhoto(photoUrl) {
+    this.user.photoUrl = photoUrl;
   }
 
 }

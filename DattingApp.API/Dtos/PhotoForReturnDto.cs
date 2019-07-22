@@ -1,8 +1,8 @@
 using System;
 
-namespace DattingApp.API.Models
+namespace DattingApp.API.Dtos
 {
-    public class Photo
+    public class PhotoForReturnDto
     {
         public int ID {get;set;}
         public string Url {get;set;}
@@ -10,7 +10,5 @@ namespace DattingApp.API.Models
         public DateTime DateAdded {get;set;}
         public bool IsMain {get;set;}
         public string PublicID {get;set;}
-        public User User {get;set;}
-        public int UserID {get;set;}
     }
 }
