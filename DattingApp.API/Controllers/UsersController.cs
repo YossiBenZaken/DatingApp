@@ -6,6 +6,7 @@ using AutoMapper;
 using DattingApp.API.Data;
 using DattingApp.API.Dtos;
 using DattingApp.API.Helpers;
+using DattingApp.API.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -56,6 +57,25 @@ namespace DattingApp.API.Controllers
             if(await _repo.SaveAll())
                 return NoContent();
             throw new Exception($"Updating user {id} failed on save");
+        }
+
+        [HttpPost("{id}/like/{recipientID}")]
+        public async Task<IActionResult> LikeUser(int id,int recipientID){
+            if (id != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
+                return Unauthorized();
+            var like = await _repo.GetLike(id,recipientID);
+            if(like != null)
+                return BadRequest("You already like this user");
+            if(await _repo.GetUser(recipientID) == null)
+                return NotFound();
+            like = new Like{
+                LikerID = id,
+                LikeeID = recipientID
+            };
+            _repo.Add<Like>(like);
+            if(await _repo.SaveAll())
+                return Ok();
+            return BadRequest("Failed to like user");
         }
     }
 }
