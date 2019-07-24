@@ -99,5 +99,38 @@ namespace DattingApp.API.Data
         {
             return await _context.SaveChangesAsync() > 0;
         }
+
+        public async Task<Message> GetMessage(int id)
+        {
+            return await _context.Messages.FirstOrDefaultAsync(m => m.ID == id);
+        }
+
+        public async Task<PagedList<Message>> GetMessagesForUser(MessageParams messageParams)
+        {
+            var messages = _context.Messages.Include(u => u.Sender).ThenInclude(p => p.Photos).Include(u => u.Recipient).ThenInclude(p => p.Photos).AsQueryable();
+            switch(messageParams.MessageContainer){
+                case "Inbox":
+                    messages = messages.Where(u => u.RecipientID == messageParams.UserID && u.RecipientDelete == false);
+                    break;
+                case "Outbox":
+                    messages = messages.Where(u => u.SenderID == messageParams.UserID && u.SenderDeleted == false);
+                    break;
+                default:
+                    messages = messages.Where(u => u.RecipientID == messageParams.UserID && u.SenderDeleted == false && u.IsRead == false);
+                    break;
+            }
+            messages = messages.OrderByDescending(d => d.MessageSent);
+            return await PagedList<Message>.CreateAsync(messages,messageParams.PageNumber,messageParams.PageSize);
+        }
+
+        public async Task<IEnumerable<Message>> GetMessageThread(int userID, int recipientID)
+        {
+            var messages = await _context.Messages.Include(u => u.Sender).ThenInclude(p => p.Photos)
+                .Include(u => u.Recipient).ThenInclude(p => p.Photos)
+                .Where(m => m.RecipientID == userID && m.RecipientDelete == false && m.SenderID == recipientID || m.RecipientID == recipientID && m.SenderID == userID && m.SenderDeleted == false)
+                .OrderByDescending(m => m.MessageSent)
+                .ToListAsync();
+            return messages;
+        }
     }
 }
