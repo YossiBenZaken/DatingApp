@@ -39,30 +39,33 @@ namespace DattingApp.API.Data
 
         public async Task<Photo> GetPhoto(int id)
         {
-            var photo = await _context.Photos.FirstOrDefaultAsync(p => p.ID == id);
+            var photo = await _context.Photos.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.ID == id);
             return photo;
         }
 
-        public async Task<User> GetUser(int id)
+        public async Task<User> GetUser(int id, bool isCurrentUser)
         {
-            var user = await _context.Users.Include(p => p.Photos).FirstOrDefaultAsync(u => u.ID == id);
+            var query = _context.Users.Include(p => p.Photos).AsQueryable();
+            if(isCurrentUser)
+                query = query.IgnoreQueryFilters();
+            var user = await query.FirstOrDefaultAsync(u => u.Id == id);
             return user;
         }
 
         public async Task<PagedList<User>> GetUsers(UserParams userParams)
         {
             var users = _context.Users.Include(p => p.Photos).OrderByDescending(u => u.LastActive).AsQueryable();
-            users = users.Where(u => u.ID != userParams.UserID);
+            users = users.Where(u => u.Id != userParams.UserID);
             users = users.Where(u => u.Gender == userParams.Gender);
             if(userParams.Likers)
             {
                 var userLikers = await GetUserLikes(userParams.UserID, userParams.Likers);
-                users = users.Where(u => userLikers.Contains(u.ID));
+                users = users.Where(u => userLikers.Contains(u.Id));
             }
             if(userParams.Likees)
             {
                 var userLikees = await GetUserLikes(userParams.UserID, userParams.Likers);
-                users = users.Where(u => userLikees.Contains(u.ID));
+                users = users.Where(u => userLikees.Contains(u.Id));
             }
             if (userParams.MinAge != 18 || userParams.MaxAge != 99)
             {
@@ -87,7 +90,7 @@ namespace DattingApp.API.Data
 
         private async Task<IEnumerable<int>> GetUserLikes(int id, bool likers)
         {
-            var user = await _context.Users.Include(x => x.Likers).Include(x => x.Likees).FirstOrDefaultAsync(u => u.ID == id);
+            var user = await _context.Users.Include(x => x.Likers).Include(x => x.Likees).FirstOrDefaultAsync(u => u.Id == id);
             if(likers) {
                 return user.Likers.Where(u => u.LikeeID == id).Select(i => i.LikerID);
             }

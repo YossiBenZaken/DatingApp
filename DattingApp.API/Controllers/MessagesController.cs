@@ -13,7 +13,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace DattingApp.API.Controllers
 {
     [ServiceFilter(typeof(LogUserActivity))]
-    [Authorize]
     [Route("api/users/{userID}/[controller]")]
     [ApiController]
     public class MessagesController : ControllerBase
@@ -59,11 +58,11 @@ namespace DattingApp.API.Controllers
 
         [HttpPost]
         public async Task<IActionResult> CreateMessage(int userID, MessageForCreationDto messageForCreationDto){
-            var sender = await _repo.GetUser(userID);
-            if(sender.ID != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
+            var sender = await _repo.GetUser(userID, false);
+            if(sender.Id != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
                 return Unauthorized();
             messageForCreationDto.SenderID = userID;
-            var recipient = await _repo.GetUser(messageForCreationDto.RecipientID);
+            var recipient = await _repo.GetUser(messageForCreationDto.RecipientID, false);
             if(recipient == null)
                 return BadRequest("Could not find user");
             var message = _mapper.Map<Message>(messageForCreationDto);

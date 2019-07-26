@@ -13,7 +13,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace DattingApp.API.Controllers
 {
     [ServiceFilter(typeof(LogUserActivity))]
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
@@ -28,7 +27,7 @@ namespace DattingApp.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetUsers([FromQuery]UserParams userParams){
             var currentUserID =int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            var userFromRepo = await _repo.GetUser(currentUserID);
+            var userFromRepo = await _repo.GetUser(currentUserID, true);
             userParams.UserID = currentUserID;
 
             if (string.IsNullOrEmpty(userParams.Gender))
@@ -43,7 +42,8 @@ namespace DattingApp.API.Controllers
         }
         [HttpGet("{id}", Name = "GetUser")]
         public async Task<IActionResult> GetUser(int id){
-            var user = await _repo.GetUser(id);
+            var isCurrentUser = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value) == id;
+            var user = await _repo.GetUser(id, isCurrentUser);
             var userToReturn = _mapper.Map<UserForDetailedDto>(user);
             return Ok(userToReturn);
         }
@@ -52,7 +52,7 @@ namespace DattingApp.API.Controllers
         public async Task<IActionResult> UpdateUser(int id,UserForUpdateDto userForUpdateDto){
             if (id != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
                 return Unauthorized();
-            var userFromRepo = await _repo.GetUser(id);
+            var userFromRepo = await _repo.GetUser(id, true);
             _mapper.Map(userForUpdateDto, userFromRepo);
             if(await _repo.SaveAll())
                 return NoContent();
@@ -66,7 +66,7 @@ namespace DattingApp.API.Controllers
             var like = await _repo.GetLike(id,recipientID);
             if(like != null)
                 return BadRequest("You already like this user");
-            if(await _repo.GetUser(recipientID) == null)
+            if(await _repo.GetUser(recipientID, false) == null)
                 return NotFound();
             like = new Like{
                 LikerID = id,

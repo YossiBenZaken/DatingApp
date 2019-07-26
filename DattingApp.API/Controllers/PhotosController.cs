@@ -14,7 +14,6 @@ using Microsoft.Extensions.Options;
 
 namespace DattingApp.API.Controllers
 {
-    [Authorize]
     [Route("api/users/{userID}/photos")]
     [ApiController]
     public class PhotosController : ControllerBase
@@ -48,7 +47,7 @@ namespace DattingApp.API.Controllers
         {
             if (userID != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
                 return Unauthorized();
-            var userFromRepo = await _repo.GetUser(userID);
+            var userFromRepo = await _repo.GetUser(userID,true);
             var file = photoForCreationDto.File;
             var uploadResult = new ImageUploadResult();
             if (file.Length > 0)
@@ -83,7 +82,7 @@ namespace DattingApp.API.Controllers
         {
             if (userID != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
                 return Unauthorized();
-            var user = await _repo.GetUser(userID);
+            var user = await _repo.GetUser(userID, true);
             if (!user.Photos.Any(p => p.ID == id))
                 return Unauthorized();
             var photoFromRepo = await _repo.GetPhoto(id);
@@ -102,7 +101,7 @@ namespace DattingApp.API.Controllers
         {
             if (userID != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
                 return Unauthorized();
-            var user = await _repo.GetUser(userID);
+            var user = await _repo.GetUser(userID, true);
             if (!user.Photos.Any(p => p.ID == id))
                 return Unauthorized();
             var photoFromRepo = await _repo.GetPhoto(id);

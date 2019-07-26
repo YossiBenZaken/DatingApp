@@ -34,13 +34,8 @@ export class RegisterComponent implements OnInit {
       dateOfBirth: [null, Validators.required],
       city: ['', Validators.required],
       country: ['', Validators.required],
-      password: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(8)]],
-      confirmpassword: ['', Validators.required]
-    }, {validators: this.passwordMatchValidator});
-  }
-
-  passwordMatchValidator(g: FormGroup) {
-    return g.get('password').value === g.get('confirmpassword').value ? null : { mismatch: true};
+      password: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(8)]]
+    });
   }
 
   register() {
@@ -59,7 +54,7 @@ export class RegisterComponent implements OnInit {
     console.log(this.registerForm.value);
   }
   cancel() {
-    this.cancelRegister.emit(false);
+    this.cancelRegister.emit();
     this.alertify.message('cancel');
   }
 }
